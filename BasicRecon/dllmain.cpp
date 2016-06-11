@@ -2,13 +2,15 @@
 #include "stdafx.h"
 
 #include "ProcessorManager.h"
+#include "DummyProcessor.h"
 
 extern "C"
 {
-	IProcessorManager * GetProcessorManager()
+	__declspec(dllexport) IProcessorManager * GetProcessorManager()
 	{
 		auto processor_manager = new CProcessorManager;
 
+		processor_manager->AddProcessor(new CDummyProcessor);
 
 		return processor_manager;
 	}
