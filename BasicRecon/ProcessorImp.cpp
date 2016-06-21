@@ -2,6 +2,8 @@
 #include "ProcessorImp.h"
 #include <iostream>
 #include <algorithm>
+#include "..\Interface\Interface.h"
+#include <assert.h>
 
 using namespace std;
 
@@ -74,12 +76,29 @@ void CProcessorImp::Feed(const wchar_t * out_port, IData * data)
 	}
 }
 
-bool CProcessorImp::AddProperty(const wchar_t * name, PropertyType type)
+bool CProcessorImp::AddProperty(const wchar_t * name, 
+	PropertyType type)
 {
-	TODO(try...catch...);
-
-	auto property = new CPropertyImp(name, type);
-	return _properties.AddProperty(property);
+	try
+	{
+		switch (type)
+		{
+		case PropertyBool:
+			return _properties.AddProperty(new CBoolProperty(name));
+		case PropertyInt:
+			return _properties.AddProperty(new CIntProperty(name));
+		case PropertyFloat:
+			return _properties.AddProperty(new CFloatProperty(name));
+		case PropertyString:
+			return _properties.AddProperty(new CStringProperty(name));
+		default:
+			return false;
+		}
+	}
+	catch (std::bad_alloc&)
+	{
+		return false;
+	}
 }
 
 IPropertyEnumerator * CProcessorImp::GetProperties()
@@ -87,11 +106,145 @@ IPropertyEnumerator * CProcessorImp::GetProperties()
 	return &_properties;
 }
 
+void CProcessorImp::SetIntProperty(const wchar_t * name, int value)
+{
+	assert(name != nullptr && name[0] != 0);
+
+	auto property = _properties.GetProperty(name);
+	if (property == nullptr)
+		throw PropertyException(name, PropertyException::PropertyNotFound);
+
+	if (property->GetType() != PropertyInt)
+		throw PropertyException(name, PropertyException::TypeNotMatch);
+
+	auto int_value = dynamic_cast<IIntValue*>(property);
+	assert(int_value != nullptr);
+	int_value->SetValue(value);
+}
+
+int CProcessorImp::GetIntProperty(const wchar_t * name)
+{
+	assert(name != nullptr && name[0] != 0);
+
+	auto property = _properties.GetProperty(name);
+	if (property == nullptr)
+		throw PropertyException(name, PropertyException::PropertyNotFound);
+
+	if (property->GetType() != PropertyInt)
+		throw PropertyException(name, PropertyException::TypeNotMatch);
+
+	auto int_value = dynamic_cast<IIntValue*>(property);
+	assert(int_value != nullptr);
+
+	return int_value->GetValue();
+}
+
+void CProcessorImp::SetFloatProperty(const wchar_t * name, double value)
+{
+	assert(name != nullptr && name[0] != 0);
+
+	auto property = _properties.GetProperty(name);
+	if (property == nullptr)
+		throw PropertyException(name, PropertyException::PropertyNotFound);
+
+	if (property->GetType() != PropertyFloat)
+		throw PropertyException(name, PropertyException::TypeNotMatch);
+
+	auto float_value = dynamic_cast<IFloatValue*>(property);
+	assert(float_value != nullptr);
+	float_value->SetValue(value);
+}
+
+double CProcessorImp::GetFloatProperty(const wchar_t * name)
+{
+	assert(name != nullptr && name[0] != 0);
+
+	auto property = _properties.GetProperty(name);
+	if (property == nullptr)
+		throw PropertyException(name, PropertyException::PropertyNotFound);
+
+	if (property->GetType() != PropertyFloat)
+		throw PropertyException(name, PropertyException::TypeNotMatch);
+
+	auto float_value = dynamic_cast<IFloatValue*>(property);
+	assert(float_value != nullptr);
+
+	return float_value->GetValue();
+}
+
+void CProcessorImp::SetBoolProperty(const wchar_t * name, bool value)
+{
+	assert(name != nullptr && name[0] != 0);
+
+	auto property = _properties.GetProperty(name);
+	if (property == nullptr)
+		throw PropertyException(name, PropertyException::PropertyNotFound);
+
+	if (property->GetType() != PropertyBool)
+		throw PropertyException(name, PropertyException::TypeNotMatch);
+
+	auto bool_value = dynamic_cast<IBoolValue*>(property);
+	assert(bool_value != nullptr);
+	bool_value->SetValue(value);
+}
+
+bool CProcessorImp::GetBoolProperty(const wchar_t * name)
+{
+	assert(name != nullptr && name[0] != 0);
+
+	auto property = _properties.GetProperty(name);
+	if (property == nullptr)
+		throw PropertyException(name, PropertyException::PropertyNotFound);
+
+	if (property->GetType() != PropertyBool)
+		throw PropertyException(name, PropertyException::TypeNotMatch);
+
+	auto bool_value = dynamic_cast<IBoolValue*>(property);
+	assert(bool_value != nullptr);
+
+	return bool_value->GetValue();
+}
+
+void CProcessorImp::SetStringProperty(const wchar_t * name, const wchar_t * value)
+{
+	assert(name != nullptr && name[0] != 0);
+
+	auto property = _properties.GetProperty(name);
+	if (property == nullptr)
+		throw PropertyException(name, PropertyException::PropertyNotFound);
+
+	if (property->GetType() != PropertyString)
+		throw PropertyException(name, PropertyException::TypeNotMatch);
+
+	auto string_value = dynamic_cast<IStringValue*>(property);
+	assert(string_value != nullptr);
+	string_value->SetValue(value);
+}
+
+
+const wchar_t * CProcessorImp::GetStringProperty(const wchar_t * name)
+{
+	assert(name != nullptr && name[0] != 0);
+
+	auto property = _properties.GetProperty(name);
+	if (property == nullptr)
+		throw PropertyException(name, PropertyException::PropertyNotFound);
+
+	if (property->GetType() != PropertyString)
+		throw PropertyException(name, PropertyException::TypeNotMatch);
+
+	auto string_value = dynamic_cast<IStringValue*>(property);
+	assert(string_value != nullptr);
+	return string_value->GetValue();
+}
+
 bool CPortEnumerator::AddPort(IPort* port)
 {
 	if (port == nullptr)
 		return false;
-	_ports.insert(std::make_pair(port->GetName(), port));
+
+	shared_ptr<IPort> p(port);
+	_ports.insert(std::make_pair(port->GetName(), p));
 
 	return true;
 }

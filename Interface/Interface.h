@@ -1,4 +1,8 @@
 #pragma once
+#ifndef OUT
+#define OUT
+#define IN
+#endif
 
 enum DataType
 {
@@ -56,12 +60,6 @@ enum DimensionType
 	DimensionInvalid = 100,
 };
 
-struct Dimension
-{
-	DimensionType type;
-	unsigned int start_index;
-	unsigned int length;
-};
 
 enum PropertyType
 {
@@ -75,7 +73,7 @@ struct IProperty
 {
 	virtual const wchar_t * GetName() = 0;
 	virtual PropertyType GetType() = 0;
-	virtual void * GetValueInterface() = 0;
+//	virtual void * GetValueInterface() = 0;
 };
 
 struct IPropertyEnumerator
@@ -116,9 +114,16 @@ struct IDimensions
 		OUT unsigned int& start_index, OUT unsigned int& length) = 0;
 };
 
+struct IMemory
+{
+	virtual void Lock() = 0;
+	virtual void Release() = 0;
+};
+
 struct IData
 {
 	virtual void * GetData() = 0;
+	virtual DataType GetDataType() = 0;
 	virtual IDimensions * GetDimension() = 0;
 };
 
